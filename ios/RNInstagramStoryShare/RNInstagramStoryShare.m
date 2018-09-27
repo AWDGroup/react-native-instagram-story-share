@@ -46,6 +46,7 @@ RCT_EXPORT_METHOD(share:(NSDictionary *)options
                   reject:(RCTPromiseRejectBlock)reject) {
     NSString *deeplinkingUrl = [RCTConvert NSString:options[@"deeplinkingUrl"]];
     NSURL *backgroundImageUrl = [RCTConvert NSURL:options[@"backgroundImage"]];
+    NSURL *stickerImageUrl = [RCTConvert NSURL:options[@"stickerImage"]];
     
     if(deeplinkingUrl && backgroundImageUrl){
         if ([backgroundImageUrl.scheme.lowercaseString isEqualToString:@"data"]) {
@@ -65,6 +66,7 @@ RCT_EXPORT_METHOD(share:(NSDictionary *)options
 
             /* deeplink to instagram */
             [self backgroundImage:UIImagePNGRepresentation([UIImage imageWithData:data])
+                  stickerImageURL:stickerImageUrl
                   attributionURL: deeplinkingUrl
                   resolve:resolve
                   reject:reject];
@@ -88,6 +90,7 @@ RCT_EXPORT_METHOD(share:(NSDictionary *)options
 }
 
 - (void)backgroundImage:(NSData *)backgroundImage
+                stickerImageURL: (NSURL*) stickerImageUrl
                 attributionURL:(NSString *)attributionURL
                 resolve:(RCTPromiseResolveBlock)resolve
                 reject:(RCTPromiseRejectBlock)reject
@@ -97,8 +100,21 @@ RCT_EXPORT_METHOD(share:(NSDictionary *)options
     NSURL *urlScheme = [NSURL URLWithString:@"instagram-stories://share"];
     if ([[UIApplication sharedApplication] canOpenURL:urlScheme]) {
         
+        NSData * stickerImage;
+        if (stickerImageUrl && [stickerImageUrl.scheme.lowercaseString isEqualToString:@"data"])
+        {
+            NSData *data = [NSData dataWithContentsOfURL:stickerImageUrl
+                                                 options:(NSDataReadingOptions)0
+                                                   error:nil];
+            if (data)
+            {
+                stickerImage = UIImagePNGRepresentation([UIImage imageWithData:data]);
+            }
+        }
+        
         // Assign background image asset and attribution link URL to pasteboard
         NSArray *pasteboardItems = @[@{@"com.instagram.sharedSticker.backgroundImage" : backgroundImage,
+                                       @"com.instagram.sharedSticker.stickerImage" : stickerImage,
                                        @"com.instagram.sharedSticker.contentURL" : attributionURL}];
         if (@available(iOS 10.0, *)) {
             NSDictionary *pasteboardOptions = @{UIPasteboardOptionExpirationDate : [[NSDate date] dateByAddingTimeInterval:60 * 5]};
