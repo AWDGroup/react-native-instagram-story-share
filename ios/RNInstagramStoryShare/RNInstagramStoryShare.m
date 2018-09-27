@@ -23,6 +23,24 @@ RCT_EXPORT_MODULE();
     return YES;
 }
 
+RCT_EXPORT_METHOD(isInstagramInstalledOnDevice:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject)
+{
+    NSURL *urlScheme = [NSURL URLWithString:@"instagram-stories://share"];
+    if ([[UIApplication sharedApplication] canOpenURL:urlScheme])
+    {
+        resolve(nil);
+    }
+    else
+    {
+        NSString *errorMessage = @"Not installed";
+        NSDictionary *userInfo = @{NSLocalizedFailureReasonErrorKey: NSLocalizedString(errorMessage, nil)};
+        NSError *error = [NSError errorWithDomain:@"com.rninstagramstoryshare" code:1 userInfo:userInfo];
+        
+        reject(RCTErrorUnspecified, errorMessage, error);
+    }
+}
+
 RCT_EXPORT_METHOD(share:(NSDictionary *)options
                   resolve:(RCTPromiseResolveBlock)resolve
                   reject:(RCTPromiseRejectBlock)reject) {
